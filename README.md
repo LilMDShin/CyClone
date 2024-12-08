@@ -1,2 +1,2 @@
 # CyClone
-Cyclone tracker
+Simulation of a cyclone tracker
