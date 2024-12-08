@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  broker:
+    image: apache/kafka:latest
+    container_name: broker
+    environment:
+      KAFKA_KRAFT_MODE: "true"
+      # Redefine PLAINTEXT and these variables once ready to dockerize
+      KAFKA_LISTENERS: "LISTENER_IN://broker:29094,PLAINTEXT://0.0.0.0:9092,PLAINTEXT_CONTROLLER://0.0.0.0:9093"
+      KAFKA_ADVERTISED_LISTENERS: "LISTENER_IN://broker:29094, PLAINTEXT://192.168.1.10:9092"
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE: "false"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_BROKER_ID: "1"
+      # The broker with ID 1 will be the voter and will listen on port 9093
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@broker:9093"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_IN:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: "PLAINTEXT_CONTROLLER"
+      KAFKA_OFFSET_TOPIC_REPLICATION_FACTOR: "1"
+      # KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      # KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOGJ_LOGGERS: "DEBUG,stdout"
+      HOST_NAME: "broker"
+
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+      - "29094:29094"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      kafka-network:
+        ipv4_address: 192.168.1.10
+
+# Add consumer here ?
+  consumer:
+    # image: apache/kafka:latest
+    container_name: consumer
+    # depends_on:
+    #   - broker
+    build:
+      context: ./kafka/consumer
+      dockerfile: Dockerfile
+    environment:
+      PYTHONUNBUFFERED: "1"
+    networks:
+      kafka-network:
+        ipv4_address: 192.168.1.11
+
+# Important note : need to manually create the network kafka-network for it to work
+
+networks:
+  kafka-network:  # Correctly defined as a mapping
+    external: true
+    driver: bridge
+
+volumes:
+  kafka-data:

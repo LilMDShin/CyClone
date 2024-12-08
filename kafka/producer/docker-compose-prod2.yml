@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  producer2:
+    container_name: producer2
+    build:
+      context: .
+      dockerfile: Dockerfile.prod2
+    environment:
+      PYTHONUNBUFFERED: "1"
+    networks:
+      kafka-network: {}
+
+networks:
+  kafka-network:
+    external: true
+    driver: bridge
