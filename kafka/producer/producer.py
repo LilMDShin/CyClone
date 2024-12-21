@@ -17,7 +17,7 @@ def json_serializer(data):
 while (True):
     try:
         producer = KafkaProducer(
-            bootstrap_servers='192.168.1.10:9092',
+            bootstrap_servers='broker:9092',
             value_serializer=json_serializer,
             key_serializer=json_serializer,
             acks=1
