@@ -5,8 +5,8 @@ CREATE DATABASE cyclone;
 
 CREATE TABLE Cyclone(
     name VARCHAR(32) PRIMARY KEY,
-    formationDate DATE,
-    dissipationDate DATE
+    formationDate TIMESTAMP NOT NULL,
+    dissipationDate TIMESTAMP
 );
 
 
