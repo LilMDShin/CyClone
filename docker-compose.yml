@@ -41,6 +41,37 @@ services:
       kafka-network:
         ipv4_address: 192.168.1.11
 
+  db:
+    image: postgres:latest
+    container_name: db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: cyclonemdp
+      POSTGRES_DB: cyclone
+    ports:
+      - "5433:5432"
+    networks:
+      kafka-network:
+        ipv4_address: 192.168.1.14
+    volumes:
+      - ./CyClone.sql:/docker-entrypoint-initdb.d/CyClone.sql
+      - postgres-data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./cycloneAPI
+      dockerfile: Dockerfile
+    container_name: api
+    ports:
+      - "8111:8111"
+    environment:
+      DATABASE_URL: "postgresql://postgres:cyclonemdp@db:5432/cyclone"
+    depends_on:
+      - db
+    networks:
+      kafka-network:
+        ipv4_address: 192.168.1.15
+
 # Important note : need to manually create the network kafka-network for it to work
 
 networks:
@@ -50,3 +81,4 @@ networks:
 
 volumes:
   kafka-data:
+  postgres-data:

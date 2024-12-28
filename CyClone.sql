@@ -1,5 +1,5 @@
-DROP DATABASE IF EXISTS cyclone;
-CREATE DATABASE cyclone;
+DROP TABLE IF EXISTS Observation CASCADE;
+DROP TABLE IF EXISTS Cyclone CASCADE;
 \c cyclone;
 
 
@@ -16,18 +16,19 @@ CREATE TABLE Observation(
     latitude NUMERIC(12,10) NOT NULL,
 	longitude NUMERIC(13,10) NOT NULL,
     observationDate TIMESTAMP NOT NULL,
-    observationRadius INT NOT NULL,
+    observationRadius INT,
     intensity INT CHECK(intensity BETWEEN 1 AND 5),
 	CONSTRAINT check_latitude CHECK (latitude BETWEEN -90 AND 90),
 	CONSTRAINT check_longitude CHECK (longitude BETWEEN -180 AND 180),
-    FOREIGN KEY (cycloneName) REFERENCES Cyclone(name)
+    FOREIGN KEY (cycloneName) REFERENCES Cyclone(name) ON UPDATE CASCADE
 );
 
 
 INSERT INTO Cyclone(name, formationDate, dissipationDate) VALUES
     ('Irma', '2017-08-30', '2017-09-12'),
     ('Katrina', '2005-08-23', '2005-08-31'),
-    ('Andrew', '1992-08-16', '1992-08-28');
+    ('Andrew', '1992-08-16', '1992-08-28'),
+    ('Achille', '2002-08-16', '1992-08-28');
 
 
 INSERT INTO Observation(cycloneName, latitude, longitude, observationDate, observationRadius, intensity) VALUES

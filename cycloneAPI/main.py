@@ -101,3 +101,25 @@ def get_cyclones_by_observation_date(
     cyclones = db.query(models.Cyclone).filter(models.Cyclone.name.in_(cyclone_names)).all()
 
     return cyclones
+
+@app.put("/cyclones/{current_name}/rename", response_model=schemas.Cyclone)
+def rename_cyclone(current_name: str, new_name: str, db: Session = Depends(get_db)):
+    """
+    Renames a cyclone. Observations are updated automatically by the database.
+    """
+    # Check if the new name already exists
+    existing_cyclone = db.query(models.Cyclone).filter(models.Cyclone.name == new_name).first()
+    if existing_cyclone:
+        raise HTTPException(status_code=400, detail="A cyclone with this name already exists.")
+
+    # Fetch the cyclone to rename
+    cyclone = db.query(models.Cyclone).filter(models.Cyclone.name == current_name).first()
+    if not cyclone:
+        raise HTTPException(status_code=404, detail="Cyclone not found.")
+
+    # Update the cyclone name
+    cyclone.name = new_name
+    db.commit()  # Commit the update; the database handles cascading updates
+
+    db.refresh(cyclone)  # Refresh the cyclone instance
+    return cyclone
