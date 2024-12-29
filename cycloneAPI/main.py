@@ -35,9 +35,9 @@ def create_cyclone(cyclone: schemas.CycloneCreate, db: Session = Depends(get_db)
     return db_cyclone
 
 
-@app.get("/cyclones/{cyclone_name}", response_model=schemas.Cyclone)
-def get_cyclone(cyclone_name: str, db: Session = Depends(get_db)):
-    cyclone = db.query(models.Cyclone).filter(models.Cyclone.name == cyclone_name).first()
+@app.get("/cyclones/{cyclonename}", response_model=schemas.Cyclone)
+def get_cyclone(cyclonename: str, db: Session = Depends(get_db)):
+    cyclone = db.query(models.Cyclone).filter(models.Cyclone.name == cyclonename).first()
     if cyclone is None:
         raise HTTPException(status_code=404, detail="Cyclone not found")
     return cyclone
@@ -47,11 +47,11 @@ def get_cyclone(cyclone_name: str, db: Session = Depends(get_db)):
 def create_observation(observation: schemas.ObservationCreate, db: Session = Depends(get_db)):
 
     # Check if the cyclone exists and create it if not
-    cyclone = db.query(models.Cyclone).filter(models.Cyclone.name == observation.cyclone_name).first()
+    cyclone = db.query(models.Cyclone).filter(models.Cyclone.name == observation.cyclonename).first()
     if not cyclone:
         new_cyclone = models.Cyclone(
-            name=observation.cyclone_name,
-            formation_date=observation.observation_date.date(),
+            name=observation.cyclonename,
+            formationdate=observation.observationdate.date(),
             dissipation_date=None
         )
         db.add(new_cyclone)
@@ -65,40 +65,40 @@ def create_observation(observation: schemas.ObservationCreate, db: Session = Dep
     return db_observation
     
 
-@app.put("/cyclones/{cyclone_name}/dissipation_date", response_model=schemas.Cyclone)
-def update_dissipation_date(cyclone_name: str, dissipation_date: schemas.CycloneUpdate, db: Session = Depends(get_db)):
+@app.put("/cyclones/{cyclonename}/dissipation_date", response_model=schemas.Cyclone)
+def update_dissipation_date(cyclonename: str, dissipation_date: schemas.CycloneUpdate, db: Session = Depends(get_db)):
     # Fetch the cyclone by name
-    cyclone = db.query(models.Cyclone).filter(models.Cyclone.name == cyclone_name).first()
+    cyclone = db.query(models.Cyclone).filter(models.Cyclone.name == cyclonename).first()
 
     # If the cyclone doesn't exist, raise a 404 error
     if not cyclone:
         raise HTTPException(status_code=404, detail="Cyclone not found")
 
     # Update the dissipation_date field
-    cyclone.dissipation_date = dissipation_date.dissipation_date
+    cyclone.dissipationdate = dissipationdate.dissipationdate
     db.commit()  # Save changes to the database
     db.refresh(cyclone)  # Refresh the instance
 
     return cyclone
 
 
-@app.get("/cyclones/{observation_date}", response_model=List[schemas.Cyclone])
-def get_cyclones_by_observation_date(
-    observation_date: date,
+@app.get("/cyclones/{observationDate}", response_model=List[schemas.Cyclone])
+def get_cyclones_by_observationDate(
+    observationDate: date,
     db: Session = Depends(get_db),
 ):
     # Query observations where the date part matches the provided date
     observations = (
         db.query(models.Observation)
-        .filter(func.date(models.Observation.observation_date) == observation_date)
+        .filter(func.date(models.Observation.observationdate) == observationdate)
         .all()
     )
 
     # Extract cyclone names from the observations
-    cyclone_names = {obs.cyclone_name for obs in observations}
+    cyclonenames = {obs.cyclonename for obs in observations}
 
     # Query cyclones matching the extracted names
-    cyclones = db.query(models.Cyclone).filter(models.Cyclone.name.in_(cyclone_names)).all()
+    cyclones = db.query(models.Cyclone).filter(models.Cyclone.name.in_(cyclonenames)).all()
 
     return cyclones
 
