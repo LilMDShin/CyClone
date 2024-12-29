@@ -1,0 +1,131 @@
+{
+    "cyclones": [
+      {
+        "name": "CycloneA",
+        "formationDate": "2024-01-10",
+        "dissipationDate": "2024-01-20",
+        "observations": [
+          {
+            "latitude": 20.0,
+            "longitude": -60.0,
+            "observationDate": "2024-01-11T12:00:00Z",
+            "observationRadius": 300,
+            "intensity": 3
+          },
+          {
+            "latitude": 22.0,
+            "longitude": -55.0,
+            "observationDate": "2024-01-12T12:00:00Z",
+            "observationRadius": 320,
+            "intensity": 4
+          },
+          {
+            "latitude": 24.0,
+            "longitude": -50.0,
+            "observationDate": "2024-01-12T12:00:00Z",
+            "observationRadius": 320,
+            "intensity": 4
+          },
+          {
+            "latitude": 26.0,
+            "longitude": -45.0,
+            "observationDate": "2024-01-12T12:00:00Z",
+            "observationRadius": 320,
+            "intensity": 4
+          }
+        ]
+      },
+      {
+        "name": "CycloneB",
+        "formationDate": "2024-02-01",
+        "dissipationDate": "2024-02-15",
+        "observations": [
+          {
+            "latitude": 43.2957547,
+            "longitude": -0.3685668,
+            "observationDate": "2024-02-05T14:00:00Z",
+            "observationRadius": 100,
+            "intensity": 2
+          },
+          {
+            "latitude": 44.0,
+            "longitude": -1.0,
+            "observationDate": "2024-02-06T14:00:00Z",
+            "observationRadius": 100,
+            "intensity": 3
+          }
+        ]
+      },
+      {
+        "name": "CycloneC",
+        "formationDate": "2024-12-04",
+        "dissipationDate": "2024-12-04",
+        "observations": [
+          {
+            "latitude": 63.2957547,
+            "longitude": -0.3685668,
+            "observationDate": "2024-12-04T14:00:00Z",
+            "observationRadius": 200,
+            "intensity": 2
+          },
+          {
+            "latitude": 64.0,
+            "longitude": -1.0,
+            "observationDate": "2024-12-04T14:00:00Z",
+            "observationRadius": 200,
+            "intensity": 3
+          },
+          {
+            "latitude": 66.0,
+            "longitude": -1.74635,
+            "observationDate": "2024-12-04T14:00:00Z",
+            "observationRadius": 200,
+            "intensity": 3
+          },
+          {
+            "latitude": 66.9,
+            "longitude": -2.0,
+            "observationDate": "2024-12-04T14:00:00Z",
+            "observationRadius": 200,
+            "intensity": 2
+          }
+        ]
+      },
+      {
+        "name": "CycloneD",
+        "formationDate": "2024-12-23",
+        "dissipationDate": "2024-12-23",
+        "observations": [
+          {
+            "latitude": 63.2957547,
+            "longitude": -0.3685668,
+            "observationDate": "2024-12-23T14:00:00Z",
+            "observationRadius": 200,
+            "intensity": 2
+          },
+          {
+            "latitude": 64.0,
+            "longitude": -1.0,
+            "observationDate": "2024-12-23T14:00:00Z",
+            "observationRadius": 200,
+            "intensity": 3
+          },
+          {
+            "latitude": 66.0,
+            "longitude": -1.74635,
+            "observationDate": "2024-12-23T14:00:00Z",
+            "observationRadius": 200,
+            "intensity": 3
+          },
+          {
+            "latitude": 66.9,
+            "longitude": -2.0,
+            "observationDate": "2024-12-23T14:00:00Z",
+            "observationRadius": 200,
+            "intensity": 2
+          }
+        ]
+      }
+    ]
+  }
+  
