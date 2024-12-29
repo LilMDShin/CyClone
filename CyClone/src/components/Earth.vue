@@ -760,20 +760,19 @@ function updateRealTimeCyclones(cycloneData: any) {
 </style> -->
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
 const props = defineProps<{
   filter: string;
-  selectedDate?: string;
 }>();
 
 const globeContainer = ref<HTMLDivElement | null>(null);
 let viewer: Cesium.Viewer | null = null;
 let ws: WebSocket | null = null;
-const WS_URL = 'ws://localhost:8765';
-const API_URL = 'http://localhost:8000';
+const WS_URL = 'ws://localhost:8000/ws'; // URL du WebSocket
+const API_URL = 'http://localhost:8111'; // URL de votre API
 const cycloneEntities = ref<Map<number, Cesium.Entity>>(new Map());
 
 onMounted(() => {
@@ -787,22 +786,11 @@ onMounted(() => {
     });
   }
 
-  watch(
-    () => props.filter,
-    (newFilter) => {
-      updateCyclones(newFilter, props.selectedDate);
-    },
-    { immediate: true }
-  );
+  if (props.filter === 'now') {
+    connectWebSocket();
+  }
 
-  watch(
-    () => props.selectedDate,
-    (newDate) => {
-      if (props.filter === 'others' && newDate) {
-        updateCyclones('others', newDate);
-      }
-    }
-  );
+  // Vous pouvez ajouter des méthodes pour récupérer les trajectoires historiques si nécessaire
 });
 
 onUnmounted(() => {
@@ -815,72 +803,30 @@ onUnmounted(() => {
   }
 });
 
-async function updateCyclones(filter: string, date?: string) {
-  if (!viewer) return;
-  viewer.entities.removeAll();
+function connectWebSocket() {
+  ws = new WebSocket(WS_URL);
 
-  if (filter === 'now') {
-    if (ws) {
-      ws.close();
-      ws = null;
-    }
+  ws.onopen = () => {
+    console.log('WebSocket connecté.');
+  };
 
-    ws = new WebSocket(WS_URL);
-
-    ws.onopen = () => {
-      console.log('WebSocket connecté.');
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const cycloneData = JSON.parse(event.data);
-        displayRealTimeCyclone(cycloneData);
-      } catch (error) {
-        console.error('Erreur lors du parsing du message WebSocket :', error);
-      }
-    };
-
-    ws.onerror = (error) => {
-      console.error('Erreur WebSocket :', error);
-    };
-
-    ws.onclose = (event) => {
-      console.log(`WebSocket déconnecté. Code : ${event.code}, Raison : ${event.reason}`);
-    };
-  } else if (filter === 'today') {
-    if (ws) {
-      ws.close();
-      ws = null;
-    }
-
-    const today = new Date().toISOString().split('T')[0];
-    const url = `${API_URL}/cyclones/${today}`;
-
+  ws.onmessage = (event) => {
     try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Erreur lors du fetch des cyclones d\'aujourd\'hui.');
-      const data = await response.json();
-      displayCyclones(data);
+      const cycloneData = JSON.parse(event.data);
+      displayRealTimeCyclone(cycloneData);
     } catch (error) {
-      console.error(error);
+      console.error('Erreur lors du parsing du message WebSocket :', error);
     }
-  } else if (filter === 'others' && date) {
-    if (ws) {
-      ws.close();
-      ws = null;
-    }
+  };
 
-    const url = `${API_URL}/cyclones/${date}`;
+  ws.onerror = (error) => {
+    console.error('Erreur WebSocket :', error);
+  };
 
-    try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`Erreur lors du fetch des cyclones pour la date ${date}.`);
-      const data = await response.json();
-      displayCyclones(data);
-    } catch (error) {
-      console.error(error);
-    }
-  }
+  ws.onclose = (event) => {
+    console.log(`WebSocket déconnecté. Code : ${event.code}, Raison : ${event.reason}`);
+    // Optionnel : tenter de se reconnecter
+  };
 }
 
 function displayRealTimeCyclone(cycloneData: any) {
@@ -923,47 +869,6 @@ function displayRealTimeCyclone(cycloneData: any) {
       },
     });
   }
-}
-
-function displayCyclones(cyclones: any[]) {
-  if (!viewer) return;
-
-  cyclones.forEach((cyclone: any) => {
-    if (!cyclone.observations || cyclone.observations.length === 0) return;
-
-    const positions: Cesium.Cartesian3[] = cyclone.observations.map((obs: any) =>
-      Cesium.Cartesian3.fromDegrees(obs.longitude, obs.latitude)
-    );
-
-    const lastObs = cyclone.observations[cyclone.observations.length - 1];
-    viewer.entities.add({
-      position: Cesium.Cartesian3.fromDegrees(lastObs.longitude, lastObs.latitude),
-      billboard: {
-        image: './src/assets/hurricane2.png',
-        width: 50,
-        height: 50,
-        scale: lastObs.observationRadius ? lastObs.observationRadius / 100 : 0.5,
-      },
-      label: {
-        text: `${cyclone.name}\nIntensity: ${lastObs.intensity}`,
-        font: '14pt sans-serif',
-        pixelOffset: new Cesium.Cartesian2(0, -50),
-        showBackground: true,
-        backgroundColor: Cesium.Color.BLACK.withAlpha(0.6),
-        fillColor: Cesium.Color.WHITE,
-      },
-    });
-
-    if (positions.length > 1) {
-      viewer.entities.add({
-        polyline: {
-          positions: positions,
-          width: 3,
-          material: Cesium.Color.RED,
-        },
-      });
-    }
-  });
 }
 </script>
 

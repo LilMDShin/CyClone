@@ -1,4 +1,7 @@
-uvicorn
 fastapi
+uvicorn
 sqlalchemy
+pydantic
+psycopg2-binary
+kafka-python
 psycopg2

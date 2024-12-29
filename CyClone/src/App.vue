@@ -1,17 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import HelloWorld from './components/HelloWorld.vue'
 import Top from './components/Top.vue'
 import Earth from './components/Earth.vue';
-import Navbar from './components/Navbar.vue';
 
 const currentFilter = ref<string>('now');
 
-function filterCyclones(filterType: string) {
-  currentFilter.value = filterType;
-  console.log("hii")
-  console.log(currentFilter.value);
-}
+
 </script>
 
 <template>
@@ -22,7 +16,6 @@ function filterCyclones(filterType: string) {
     
   </div>
   <Top />
-  <Navbar @filterCyclones="filterCyclones"/>
   <Earth :filter="currentFilter" />
 </template>
 
