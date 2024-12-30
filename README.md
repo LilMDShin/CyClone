@@ -39,7 +39,7 @@ Simulation of a cyclone tracker
 
 4. **Build and start containers for the database, api, kafka broker and consumer:**
 
-    Navigate to the CyClone root directory
+    Navigate to the CyClone directory
 
     Build and start containers:
     ```Bash
@@ -76,5 +76,17 @@ Simulation of a cyclone tracker
 
 6. **Start the frontend:**
 
-    In a new terminal, navigate to the CyClone directone
+    In a new terminal, navigate to the CyClone_front directory
 
+    Install the dependencies:
+    ```Bash
+    npm install
+    ```
+   
+    Start the development server:
+    ```Bash
+    npm run dev
+    ```
+
+This will typically start a development server at http://localhost:5173/
+You can access the frontend application in your web browser
