@@ -31,6 +31,7 @@ async def create_kafka_consumer():
                 auto_offset_reset='earliest',
                 enable_auto_commit=True
             )
+            await create_topic()
             await consumer.start()
             print("[KAFKA] Consommateur Kafka créé avec succès.")
             return consumer
@@ -41,6 +42,13 @@ async def create_kafka_consumer():
 async def create_topic():
     admin_client = AIOKafkaAdminClient(bootstrap_servers=KAFKA_BROKER)
     await admin_client.start()
+    try:
+        topic_list = [NewTopic(name="__consumer_offsets", num_partitions=1, replication_factor=1)]
+        await admin_client.create_topics(new_topics=topic_list, validate_only=False)
+        print(f"[KAFKA] Topic '__consumer_offsets' créé avec succès.")
+    except TopicAlreadyExistsError:
+        print(f"[KAFKA] Le topic '{TOPIC_NAME}' existe déjà.")
+
     try:
         topic_list = [NewTopic(name=TOPIC_NAME, num_partitions=1, replication_factor=1)]
         await admin_client.create_topics(new_topics=topic_list, validate_only=False)
@@ -141,7 +149,6 @@ async def broadcast_kafka_messages(consumer):
         await consumer.stop()
 
 async def main():
-    await create_topic()
     consumer = await create_kafka_consumer()
     websocket_server = await serve(ws_handler, "0.0.0.0", 8765)
     kafka_task = asyncio.create_task(broadcast_kafka_messages(consumer))

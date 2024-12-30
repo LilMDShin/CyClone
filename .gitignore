@@ -1,3 +1,12 @@
 # python virtual env
 .venv7
+.venv
+
+# python cache
 cycloneAPI/__pycache__
+
+# VS Code
+CyClone/.vscode
+
+# node modules
+CyClone/.node_modules
