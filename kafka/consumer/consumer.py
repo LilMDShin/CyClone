@@ -1,13 +1,12 @@
+import asyncio
 import json
-import time
-from kafka import KafkaConsumer, KafkaAdminClient
-from kafka.admin import NewTopic  # type: ignore
-from kafka.errors import KafkaError, TopicAlreadyExistsError # type: ignore
-
+from aiokafka import AIOKafkaConsumer
+from aiokafka.admin import AIOKafkaAdminClient, NewTopic
+from aiokafka.errors import KafkaError, TopicAlreadyExistsError
+from websockets import serve
 import psycopg2
 from datetime import datetime
 
-# Configuration de la BDD
 DB_CONFIG = {
     'dbname': 'cyclone',
     'user': 'postgres',
@@ -16,113 +15,140 @@ DB_CONFIG = {
     'port': '5432'
 }
 
-# Connexion à la base de données
-conn = psycopg2.connect(**DB_CONFIG)
-cursor = conn.cursor()
+TOPIC_NAME = "cyclone"
+KAFKA_BROKER = "broker:29094"
 
+connected_clients = set()
 
-# Define topic name
-topic_name = "cyclone"
-
-# Custom JSON deserializer for keys
-def json_deserializer(data):
-    if data is None:
-        return None
-    return json.loads(data.decode('utf-8'))
-
-# Retry logic
-while (True):
-    try:
-        consumer = KafkaConsumer(
-            topic_name,
-            group_id='default-group',
-            bootstrap_servers='broker:29094',
-            value_deserializer=json_deserializer,
-            key_deserializer=json_deserializer,
-            auto_offset_reset='earliest',
-            enable_auto_commit=True
-        )
-        break
-    except KafkaError as e:
-        print("Error connecting to Kafka : ", e)
-        time.sleep(2)
-
-# Create __consumer_offsets internal topic in case it can't be auto-created
-try:
-    topic_list = []
-    topic_list.append(NewTopic(name="__consumer_offsets", num_partitions=1, replication_factor=1))
-    admin_client = KafkaAdminClient(bootstrap_servers='broker:29094')
-    admin_client.create_topics(new_topics=topic_list, validate_only=False)
-except TopicAlreadyExistsError as err:
-    print("Request for topic created is failed as __consumer_offsets is already created due to ", err)
-except Exception as err:
-    print("Request for topic creation is failing due to ", err)
-
-# Consume messages
-try:
-    print("Listening for messages on topic ", topic_name, "...")
-    # for message in consumer:
-    #     print("Received message : ", message.value)
-    for message in consumer:
+async def create_kafka_consumer():
+    while True:
         try:
-            # Décodage du message reçu
-            data = message.value
-            print("Message reçu : ", data)
-
-
-            # Exemple de message attendu (format JSON) :
-            # {
-            #     "cyclone_name": "CycloneX",
-            #     "latitude": 12.345,
-            #     "longitude": 67.890,
-            #     "observation_date": "2024-12-26T14:00:00",
-            #     "observation_radius": 50,
-            #     "intensity": 3
-            # }
-
-            observation_date = datetime.strptime(data["date"], "%Y-%m-%d %H:%M:%S")
-
-            # Vérifie si le cyclone existe déjà
-            cursor.execute(
-                "SELECT name FROM cyclone WHERE name = %s", (data["cyclone_name"],)
+            consumer = AIOKafkaConsumer(
+                TOPIC_NAME,
+                bootstrap_servers=KAFKA_BROKER,
+                group_id='default-group',
+                value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+                auto_offset_reset='earliest',
+                enable_auto_commit=True
             )
-            cyclone = cursor.fetchone()
+            await consumer.start()
+            print("[KAFKA] Consommateur Kafka créé avec succès.")
+            return consumer
+        except KafkaError as e:
+            print(f"[KAFKA] Erreur de connexion à Kafka : {e}. Retentative dans 2 secondes...")
+            await asyncio.sleep(2)
 
-            # Si le cyclone n'existe pas, insère-le
-            if not cyclone:
+async def create_topic():
+    admin_client = AIOKafkaAdminClient(bootstrap_servers=KAFKA_BROKER)
+    await admin_client.start()
+    try:
+        topic_list = [NewTopic(name=TOPIC_NAME, num_partitions=1, replication_factor=1)]
+        await admin_client.create_topics(new_topics=topic_list, validate_only=False)
+        print(f"[KAFKA] Topic '{TOPIC_NAME}' créé avec succès.")
+    except TopicAlreadyExistsError:
+        print(f"[KAFKA] Le topic '{TOPIC_NAME}' existe déjà.")
+    finally:
+        await admin_client.close()
+
+async def ws_handler(websocket):
+    connected_clients.add(websocket)
+    try:
+        async for message in websocket:
+            print(f"[DEBUG] Message reçu : {message}")
+    except Exception as e:
+        print(f"[ERROR] Exception dans ws_handler : {e}")
+    finally:
+        connected_clients.remove(websocket)
+
+async def broadcast_kafka_messages(consumer):
+    print("[KAFKA] Début de la consommation des messages Kafka...")
+    try:
+        async for message in consumer:
+            data = message.value
+            print(f"[KAFKA] Message reçu de Kafka: {data}")
+
+            # Format date handling
+            try:
+                # Try first format (2024-12-26T14:00:00)
+                observation_date = datetime.strptime(data["observation_date"], "%Y-%m-%dT%H:%M:%S")
+            except (KeyError, ValueError):
+                try:
+                    # Try second format (2024-12-26 14:00:00)
+                    observation_date = datetime.strptime(data["date"], "%Y-%m-%d %H:%M:%S")
+                except (KeyError, ValueError) as e:
+                    print(f"[ERROR] Format de date invalide: {e}")
+                    continue
+
+            try:
+                # Broadcast to WebSocket clients
+                if connected_clients:
+                    msg_str = json.dumps(data)
+                    await asyncio.gather(*[client.send(msg_str) for client in connected_clients])
+                
+                # Database operations
+                conn = psycopg2.connect(**DB_CONFIG)
+                cursor = conn.cursor()
+
+                cursor.execute(
+                    "SELECT name FROM cyclone WHERE name = %s", 
+                    (data["cyclone_name"],)
+                )
+                cyclone = cursor.fetchone()
+
+                if not cyclone:
+                    cursor.execute(
+                        """
+                        INSERT INTO cyclone (name, formationDate, dissipationDate)
+                        VALUES (%s, %s, NULL)
+                        """,
+                        (data["cyclone_name"], observation_date)
+                    )
+
                 cursor.execute(
                     """
-                    INSERT INTO cyclone (name, formationDate, dissipationDate)
-                    VALUES (%s, %s, NULL)
+                    INSERT INTO observation (
+                        cycloneName, latitude, longitude, observationDate, 
+                        observationRadius, intensity
+                    ) VALUES (%s, %s, %s, %s, %s, %s)
                     """,
-                    (data["cyclone_name"], observation_date)
+                    (
+                        data["cyclone_name"],
+                        data["latitude"],
+                        data["longitude"],
+                        observation_date,
+                        data.get("observation_radius"),
+                        data.get("intensity")
+                    )
                 )
+                
                 conn.commit()
+                cursor.close()
+                conn.close()
+                print("[DB] Données insérées dans la base de données.")
 
-            # Insère l'observation
-            cursor.execute(
-                """
-                INSERT INTO observation (
-                    cycloneName, latitude, longitude, observationDate, observationRadius, intensity
-                ) VALUES (%s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    data["cyclone_name"],
-                    data["latitude"],
-                    data["longitude"],
-                    observation_date,
-                    data["observation_radius"],
-                    data["intensity"]
-                )
-            )
-            conn.commit()
+            except Exception as e:
+                print(f"[DB] Erreur lors de l'insertion des données : {e}")
+                if 'conn' in locals():
+                    conn.rollback()
+                if 'cursor' in locals() and cursor:
+                    cursor.close()
+                if 'conn' in locals() and conn:
+                    conn.close()
 
-            print("Données insérées dans la base de données.")
+    except Exception as e:
+        print(f"[KAFKA] Erreur dans broadcast_kafka_messages: {str(e)}")
+    finally:
+        await consumer.stop()
 
-        except Exception as e:
-            print(f"Erreur lors de l'insertion des données : {e}")
-            conn.rollback()
-except Exception as e:
-    print("An error occurred : ", e)
-finally:
-    consumer.close()
+async def main():
+    await create_topic()
+    consumer = await create_kafka_consumer()
+    websocket_server = await serve(ws_handler, "0.0.0.0", 8765)
+    kafka_task = asyncio.create_task(broadcast_kafka_messages(consumer))
+    await asyncio.gather(asyncio.Future(), kafka_task)
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        print(f"[ERROR] Exception non gérée : {e}")

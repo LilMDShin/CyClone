@@ -1,2 +1,3 @@
 # python virtual env
-.venv
+.venv7
+cycloneAPI/__pycache__

@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from database import SessionLocal, engine
@@ -10,6 +11,15 @@ import models, schemas
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En production, spécifiez les domaines autorisés
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Dependency to get the database session
 def get_db():
@@ -65,8 +75,8 @@ def create_observation(observation: schemas.ObservationCreate, db: Session = Dep
     return db_observation
     
 
-@app.put("/cyclones/{cyclonename}/dissipation_date", response_model=schemas.Cyclone)
-def update_dissipation_date(cyclonename: str, dissipation_date: schemas.CycloneUpdate, db: Session = Depends(get_db)):
+@app.put("/cyclones/{cyclonename}/dissipationdate", response_model=schemas.Cyclone)
+def update_dissipation_date(cyclonename: str, dissipationdate: schemas.CycloneUpdate, db: Session = Depends(get_db)):
     # Fetch the cyclone by name
     cyclone = db.query(models.Cyclone).filter(models.Cyclone.name == cyclonename).first()
 
@@ -81,26 +91,6 @@ def update_dissipation_date(cyclonename: str, dissipation_date: schemas.CycloneU
 
     return cyclone
 
-
-@app.get("/cyclones/{observationDate}", response_model=List[schemas.Cyclone])
-def get_cyclones_by_observationDate(
-    observationDate: date,
-    db: Session = Depends(get_db),
-):
-    # Query observations where the date part matches the provided date
-    observations = (
-        db.query(models.Observation)
-        .filter(func.date(models.Observation.observationdate) == observationdate)
-        .all()
-    )
-
-    # Extract cyclone names from the observations
-    cyclonenames = {obs.cyclonename for obs in observations}
-
-    # Query cyclones matching the extracted names
-    cyclones = db.query(models.Cyclone).filter(models.Cyclone.name.in_(cyclonenames)).all()
-
-    return cyclones
 
 @app.put("/cyclones/{current_name}/rename", response_model=schemas.Cyclone)
 def rename_cyclone(current_name: str, new_name: str, db: Session = Depends(get_db)):

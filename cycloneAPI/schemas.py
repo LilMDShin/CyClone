@@ -35,4 +35,4 @@ class Cyclone(CycloneBase):
 
 class CycloneUpdate(BaseModel):
     name: Optional[str] = None
-    dissipationdate: Optional[date] = None
+    dissipationdate: Optional[datetime] = None

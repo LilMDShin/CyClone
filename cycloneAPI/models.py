@@ -24,4 +24,3 @@ class Cyclone(Base):
     dissipationdate = Column(Date)
 
     observations = relationship("Observation", back_populates="cyclone")
-
