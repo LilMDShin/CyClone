@@ -35,6 +35,7 @@ if __name__ == "__main__":
     init_coord = gen_coord.init_coordinates()
     intensity = random.randint(1,5)
     observation_radius = random.randint(1,25)
+    cyclone_name = "" + id + " " + init_coord["date"]
 
     data_cyclone = {
         "id_device": id,

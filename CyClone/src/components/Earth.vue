@@ -4,12 +4,12 @@ import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
 const globeContainer = ref<HTMLDivElement | null>(null);
-const currentName = ref('');
-const newName = ref('');
+// const currentName = ref('');
+// const newName = ref('');
 let viewer: Cesium.Viewer | null = null;
 let ws: WebSocket | null = null;
 const WS_URL = 'ws://localhost:8765';
-const API_URL = 'http://localhost:8111'; // URL de votre API
+// const API_URL = 'http://localhost:8111'; // URL de votre API
 const activeCyclones = ref<Map<string, Cesium.Entity>>(new Map());
 const cycloneLastUpdate = new Map<string, number>();
 
@@ -183,7 +183,7 @@ Lon: ${cycloneData.longitude.toFixed(2)}°`,
   }
 }
 
-
+/*
 async function renameCyclone() {
   if (!currentName.value || !newName.value) {
     alert('Veuillez entrer les noms actuel et nouveau du cyclone.');
@@ -225,17 +225,20 @@ async function renameCyclone() {
     alert('Une erreur est survenue lors du renommage.');
   }
 }
+*/
 </script>
 
 <template>
   <div>
     <div ref="globeContainer" class="globe-container"></div>
     <div class="nav-container">
+      <!--
       <div class="topnav">
         <input type="text" v-model="currentName" placeholder="Nom actuel" />
         <input type="text" v-model="newName" placeholder="Nouveau nom" />
         <a href="#" @click.prevent="renameCyclone">Renommer le cyclone</a>
       </div>
+      -->
     </div>
   </div>
 </template>
