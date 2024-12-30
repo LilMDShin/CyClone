@@ -42,7 +42,7 @@ if __name__ == "__main__":
         "latitude": init_coord["init_lat"],
         "longitude": init_coord["init_long"],
         "date": init_coord["date"],
-        "cyclone_name": init_coord["date"],
+        "cyclone_name": cyclone_name,
         "intensity": intensity,
         "observation_radius": observation_radius
         # Maybe more params here
