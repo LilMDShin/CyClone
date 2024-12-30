@@ -29,7 +29,9 @@ Simulation of a cyclone tracker
     ```
 
     Add Google's public dns
+
     If the "dns" parameter is not in the file then add the following line : "dns": ["8.8.8.8", "8.8.4.4"]
+    
     Otherwise, if the options "8.8.8.8", "8.8.4.4" are not specified add them to the existing configuration
 
     Restart docker:
@@ -61,6 +63,7 @@ Simulation of a cyclone tracker
 5. **Build and start containers for the kafka producers:**
 
     Open two new terminals for the producers
+
     Navigate to the directory producer within the kafka directory
 
     Build and start the container for the first producer:
@@ -89,4 +92,5 @@ Simulation of a cyclone tracker
     ```
 
 This will typically start a development server at http://localhost:5173/
+
 You can access the frontend application in your web browser
