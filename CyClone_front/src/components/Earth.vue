@@ -103,7 +103,7 @@ function checkCycloneActivity() {
       cycloneLastUpdate.delete(cycloneName);
       console.log(`Cyclone ${cycloneName} supprimé pour cause d'inactivité.`);
 
-      // Mettre à jour la dissipation date dans l'API
+      // Ajouter dissipation date dans la BDD
       const dissipationDate = new Date().toISOString();
       updateDissipationDate(cycloneName, dissipationDate);
     }
@@ -151,7 +151,7 @@ Lon: ${cycloneData.longitude.toFixed(2)}°`,
 
   activeCyclones.value.set(cycloneName, currentEntity);
 
-  // Effectuer une requête pour récupérer la trajectoire complète
+  // Requête pour récupérer toute la trajectoire
   try {
     const response = await fetch(`http://0.0.0.0:8111/cyclones/${encodeURIComponent(cycloneName)}`);
     if (!response.ok) {
@@ -164,7 +164,7 @@ Lon: ${cycloneData.longitude.toFixed(2)}°`,
     // Supprimer toute trajectoire précédente si elle existe
     viewer.entities.removeById(`trajectory-${cycloneName}`);
 
-    // Ajouter la trajectoire (polyline) à partir des observations
+    // Ajouter la trajectoire
     const positions = fullCycloneData.observations.map((obs: any) =>
       Cesium.Cartesian3.fromDegrees(obs.longitude, obs.latitude)
     );
@@ -175,7 +175,7 @@ Lon: ${cycloneData.longitude.toFixed(2)}°`,
         positions: positions,
         width: 3,
         material: Cesium.Color.RED,
-        clampToGround: true, // Optionnel : colle la ligne au sol
+        clampToGround: true, // Colle la ligne au sol
       },
     });
   } catch (error) {
