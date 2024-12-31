@@ -45,7 +45,6 @@ if __name__ == "__main__":
         "cyclone_name": cyclone_name,
         "intensity": intensity,
         "observation_radius": observation_radius
-        # Maybe more params here
     }
     print(data_cyclone)
     producer.send(topic_name, data_cyclone, key=id)
@@ -66,7 +65,6 @@ if __name__ == "__main__":
         "cyclone_name": data_cyclone["cyclone_name"],
         "observation_radius": data_cyclone["observation_radius"],
         "intensity": data_cyclone["intensity"]
-        # Maybe more params here
         }
         print(data_cyclone)
         producer.send(topic_name, data_cyclone, key=id)
