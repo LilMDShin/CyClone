@@ -48,7 +48,7 @@ if __name__ == "__main__":
         # Maybe more params here
     }
     print(data_cyclone)
-    producer.send(topic_name, data_cyclone)
+    producer.send(topic_name, data_cyclone, key=id)
     time.sleep(1)
     while (True):
         new_coord = gen_coord.new_coordinates(data_cyclone["latitude"], data_cyclone["longitude"])
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         # Maybe more params here
         }
         print(data_cyclone)
-        producer.send(topic_name, data_cyclone)
+        producer.send(topic_name, data_cyclone, key=id)
         time.sleep(1)
 
 

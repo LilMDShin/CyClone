@@ -50,7 +50,7 @@ async def create_topic():
         print(f"[KAFKA] Le topic '{TOPIC_NAME}' existe déjà.")
 
     try:
-        topic_list = [NewTopic(name=TOPIC_NAME, num_partitions=1, replication_factor=1)]
+        topic_list = [NewTopic(name=TOPIC_NAME, num_partitions=2, replication_factor=1)]
         await admin_client.create_topics(new_topics=topic_list, validate_only=False)
         print(f"[KAFKA] Topic '{TOPIC_NAME}' créé avec succès.")
     except TopicAlreadyExistsError:
